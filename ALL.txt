@@ -1,0 +1,799 @@
+1. CRC
+import java.util.*;
+class CRC
+{
+public static void main(String[] args)
+{
+Scanner in=new Scanner(System.in);
+int i;
+String rem;
+System.out.println("enter the dataword");
+String dw = in.next();
+int ld = dw.length();
+System.out.println("enter the generator");
+String g = in.next();
+System.out.println("the length of the dataword is"+ld);
+int lg = g.length();
+System.out.println("the length of the generator is"+lg);
+for( i=0;i<lg-1;i++)
+{
+dw+='0';
+}
+System.out.println("the modified data word is"+dw);
+String chsum=crc(dw,ld,lg,g);
+System.out.println(chsum);
+String ndw = dw.substring(0,ld);
+ndw+=chsum;
+System.out.println("the final codeword is"+ndw);
+System.out.println("Sending...");
+System.out.println("Receiving...");
+System.out.println("enter the received code");
+String rc=in.next();
+System.out.println("the received code is"+rc);
+rem=crc(rc,ld,lg,g);
+System.out.println("checksum is"+rem);
+for(i=0;i<lg-1 && rem.charAt(i)=='0';i++);
+if(i==(lg-1))
+{
+System.out.println("no error");
+}
+else{
+System.out.println("error");
+}
+}
+public static String crc(String dw,int ld,int lg,String g)
+{
+int e=lg;
+String tdw=dw.substring(0,lg);
+do{
+if(tdw.charAt(0)=='1')
+tdw=xor(tdw,g,lg);
+tdw=tdw.substring(1,lg);
+if(e<ld+lg-1)
+tdw+=dw.charAt(e);
+e++;
+}while(e<=ld+lg-1);
+return tdw;
+}
+public static String xor(String a,String b,int lg)
+{
+String c="";
+for(int i=0;i<lg;i++)
+c+=(a.charAt(i)==b.charAt(i))?'0':'1';
+return c;
+}
+}
+ 2.RSA
+import java.util.Scanner;
+class RSA
+{
+public static void main(String [] args)
+{
+Scanner in=new Scanner(System.in);
+int p,q,d,e,k=1,n,phi;
+System.out.println("Enter The Message:");
+String sentMsg=in.nextLine();
+System.out.println("*****GENERATING KEY*****");
+System.out.println("Enter The First Prime Number:");
+p=in.nextInt();
+System.out.println("Enter The Second Prime Number:");
+q=in.nextInt();
+n=p*q;
+phi=(p-1)*(q-1);
+System.out.println("n=" +n);
+System.out.println("phi=" +phi);
+do
+{
+System.out.println("Enter the value of e such that e is less than and
+relatively prime to phi:");
+e=in.nextInt();
+}
+while(gcd(e,phi)!=1);
+while(((k*phi)+1)%e!=0)
+{
+k++;
+}
+d=((k*phi)+1)/e;
+System.out.println("d=" +d);
+System.out.println("Public Key= {"+e+","+n+"}");
+System.out.println("Private Key={"+d+","+n+"}");
+System.out.println("*****ENCRYPTING*****");
+int []a=new int[sentMsg.length()];
+for(int i=0;i<sentMsg.length();i++)
+{
+int s=(int)sentMsg.charAt(i);
+a[i]=power(s,e,n);
+}
+System.out.println("Sent message Is:");
+for(int i=0;i<sentMsg.length();i++)
+System.out.print(a[i]+" ");
+System.out.println();
+System.out.println("*****DECRYPTING*****");
+String receivedMsg="";
+for(int i=0;i<sentMsg.length();i++)
+{
+int s=power(a[i],d,n);
+receivedMsg+=(char)s;
+}
+System.out.println("Decrypted message is: "+receivedMsg);
+}
+public static int power(int m,int e,int n)
+{
+int r=1;
+for(int i=0;i<e;i++)
+r=(r*m)%n;
+return r;
+}
+static int gcd(int a,int b)
+{
+int temp;
+while(b!=0)
+{
+temp=a%b;
+a=b;
+b=temp;
+}
+return a;
+}
+}
+ 3.LEAKY BUCKET
+import java.util.*;
+class Leaky{
+ public static void main(String[] args)throws InterruptedException
+ {
+ int csize=0;
+Scanner in=new Scanner(System.in);
+System.out.println("enter the bucket size");
+int bsize =in.nextInt();
+System.out.println("enter the output rate");
+int opr=in.nextInt();
+Random r=new Random();
+System.out.println("enter the number of packets");
+int n=in.nextInt();
+System.out.println("enter the time interval between packets");
+int time=in.nextInt();
+for(int i=0;i<n;i++)
+{
+int psize=r.nextInt(bsize +100);
+System.out.println("new packet arrived");
+System.out.println("Packet Number :"+(i+1)+", Packet size ="+psize);
+if(psize>bsize)
+System.out.println("packet too large...non conformimg packet");
+else if((csize+psize)>bsize)
+System.out.println("bucket overflow... non conforming packet");
+else
+csize+=psize;
+for(int j=0;j<time;j++)
+{
+if(csize>opr)
+{
+System.out.println(opr+" bytes transmitted");
+csize-=opr;
+}
+else if(csize==0)
+System.out.println("Bucket empty... No Bytes to
+transmitt");
+else
+{
+System.out.println("Remaining "+ csize+" bytes transferred");
+csize=0;
+}Thread.sleep(1000);
+}
+System.out.println("Timer Expired");
+if(csize!=0)
+{
+System.out.println(csize+"bytes remaining in the bucket");
+Thread.sleep(1000);
+}
+}
+System.out.println("No more new packets");
+if(csize!=0)
+System.out.println("\nTransmission of"+csize+"bytes remaining
+in the bucket is starting");
+while(csize>0)
+{
+if(csize>opr)
+{
+System.out.println(opr+"bytes transferred");
+csize-=opr;
+}
+else
+{
+System.out.println("Remaining"+csize+"bytes
+transmitted");
+csize=0;
+}Thread.sleep(1000);
+}
+System.out.println("Bucket Empty... Transmission completed");
+}
+}
+ 4.BELLMAN DVA
+import java.util.*;
+import java.io.*;
+class Bellman
+{
+public static class node
+{
+int dist;
+char phop;
+}
+public static void main(String[] args)
+{
+int i,j;
+char ch[]={'a','b','c','d',};
+Scanner in=new Scanner(System.in);
+System.out.println("enter the number of nodes :");
+int n=in.nextInt();
+node[][] rt=new node[n][n];
+int[][] g=new int[n][n];
+int neigh[]=new int[n];
+for(i=0;i<n;i++)
+for(j=0;j<n;j++)
+rt[i][j]=new node();
+System.out.println("enter the adjacency matrix :");
+for(i=0;i<n;i++)
+{
+for(j=0;j<n;j++)
+{
+g[i][j]=in.nextInt();
+}
+}
+System.out.println("enter the distance:");
+for(i=0;i<n;i++)
+{
+System.out.print("the distance from node "+ch[i]+ " and" );
+for(j=0;j<n;j++)
+{
+if(g[i][j]==1)
+{
+System.out.print(" node "+ch[j]+ " is: ");
+rt[i][j].dist=in.nextInt();
+}
+else
+rt[i][j].dist=999;
+rt[i][j].phop=ch[i];
+}
+}
+int nc,choice;
+do
+{
+System.out.println("1.Routing table information\n2.Routing table\n3.Exit");
+choice=in.nextInt();
+switch(choice)
+{
+case 1:System.out.println("enter the node for which routing table shld be
+constructed :");
+int src=in.nextInt();
+src--;nc=0;
+System.out.println("the neighbours of "+ch[src]+ "are:");
+for(i=0;i<n;i++)
+{
+if(g[src][i]==1)
+{
+neigh[nc]=i;
+nc++;
+System.out.println(ch[i]+"\t");
+}
+}
+for(i=0;i<n;i++)
+{
+if(src!=i)
+{
+int small=rt[src][i].dist;
+int chosen=src;
+for(j=0;j<nc;j++)
+{
+int total=rt[neigh[j]][i].dist+rt[src][neigh[j]].dist;
+if(total<small)
+{
+small=total;
+chosen=neigh[j];
+rt[src][i].phop=ch[chosen];
+}
+rt[src][i].dist=small;
+}
+System.out.println("the smallest distance from " +ch[src]+"
+to "+ch[i]+ "is: "+small);
+System.out.println("the previous hop is :"+rt[src][i].phop);
+}
+else
+rt[src][i].dist=0;
+}
+break;
+case 2:for(i=0;i<n;i++)
+{
+for(j=0;j<n;j++)
+{
+System.out.print(rt[i][j].dist);
+System.out.print(rt[i][j].phop+"\t");
+}
+System.out.print("\n");
+}
+break;
+}
+}while(choice!=3);
+}
+}
+ 5.UDP
+Server
+import java.util.*;
+import java.io.*;
+import java.net.*;
+public class MyServer {
+public static void main(String[] args) throws Exception {
+// TODO Auto-generated method stub
+DatagramSocket ds =new DatagramSocket(15000);
+byte[]buffer=new byte[100];
+Scanner in=new Scanner(System.in);
+String str2;
+do
+{
+DatagramPacket p=new DatagramPacket(buffer,buffer.length);
+ds.receive(p);
+String str=new String(p.getData());
+System.out.println("client says:"+str);
+System.out.println("Server says");
+str2=in.nextLine();
+java.util.Arrays.fill(buffer,(byte)0);
+for(int i=0;i<str2.length();i++)
+buffer[i]=(byte)str2.charAt(i);
+ds.send(new DatagramPacket(buffer,buffer.length,InetAddress.getLocalHost(),16000));
+}while(!str2.equals("bye"));
+System.out.println("Closing Chat Application");
+ds.close();
+}
+}
+Client
+import java.util.*;
+import java.io.*;
+import java.net.*;
+public class MyClient {
+public static void main(String[] args) throws Exception {
+DatagramSocket ds =new DatagramSocket(16000);
+byte[]buffer=new byte[100];
+Scanner in=new Scanner(System.in);
+System.out.println("Chat Application Started!... Type message to send and bye to quit");
+String str="",str2;
+do {
+System.out.println("client says:");
+str2=in.nextLine();
+java.util.Arrays.fill(buffer,(byte)0);
+for(int i=0;i<str2.length();i++)
+buffer[i]=(byte)str2.charAt(i);
+ds.send(new DatagramPacket(buffer,buffer.length,InetAddress.getLocalHost(),15000));
+if(!str2.equals("bye"))
+{
+System.out.println("Server says");
+DatagramPacket p=new DatagramPacket(buffer,buffer.length);
+ds.receive(p);
+str="";
+str=new String(p.getData());
+System.out.println(str);
+}
+}while(!str2.equals("bye"));
+System.out.println("Closing chat Application");
+ds.close();
+}
+}
+ 6.TCP
+Server
+import java.util.*;
+import java.io.*;
+import java.net.*;
+import java.nio.*;
+import java.nio.file.*;
+class MyServer{
+public static void main(String[]args)throws Exception{
+ServerSocket ss=new ServerSocket(8000);
+Socket newsocket=ss.accept();
+DataInputStream din=new DataInputStream(newsocket.getInputStream());
+DataOutputStream dout =new DataOutputStream(newsocket.getOutputStream());
+String fileName=din.readUTF();
+System.out.println("FileName Recieved is:"+fileName);
+List<String>lines=Files.readAllLines(Paths.get(fileName),cs);
+for(int i=0;i<lines.size();i++) {
+dout.writeUTF(lines.get(i));
+dout.flush();
+}
+dout.writeUTF("stop");
+System.out.println("files sent successfully");
+din.close();
+newsocket.close();
+ss.close();
+}
+}
+Client
+import java.util.*;
+import java.io.*;
+import java.net.*;
+public class TCPMyClient {
+public static void main(String[]args)throws Exception{
+Socket cs =new Socket("localhost",8000);
+DataInputStream din=new DataInputStream(cs.getInputStream());
+DataOutputStream dout =new DataOutputStream(cs.getOutputStream());
+BufferedReader br =new BufferedReader(new InputStreamReader(System.in));
+System.out.println("Enter a filename:");
+String fname=br.readLine();
+dout.writeUTF(fname);
+System.out.println("Filename Sent");
+String message;
+try {
+do {
+message=din.readUTF();
+System.out.println("CLient: " +message);
+}while(!message.equals("stop"));
+}catch(Exception e) {
+System.out.println("File Transfer Completed Successfully");
+}
+finally {
+br.close();
+dout.close();
+cs.close();
+}
+}
+}
+SIM 1
+set ns [new Simulator]
+set nf [open sim1.nam w]
+$ns namtrace-all $nf
+set tf [open sim1.tr w]
+$ns trace-all $tf
+proc stop { } {
+global ns nf tf
+$ns flush-trace
+close $nf
+close $tf
+exit 0
+}
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+$ns duplex-link $n0 $n1 1Mb 10ms DropTail
+$ns duplex-link $n1 $n2 200kb 10ms DropTail
+$ns queue-limit $n0 $n1 10
+$ns queue-limit $n1 $n2 10
+set udp0 [new Agent/UDP]
+$ns attach-agent $n0 $udp0
+set null0 [new Agent/Null]
+$ns attach-agent $n2 $null0
+$ns connect $udp0 $null0
+set cbr0 [new Application/Traffic/CBR]
+$cbr0 set type_ CBR
+$cbr0 set packetSize_ 100
+$cbr0 set rate_ 1Mb
+$cbr0 set random_ false
+$cbr0 attach-agent $udp0
+$ns at 0.0 "$cbr0 start"
+$ns at 5.0 "stop"
+$ns run
+AWK FILE
+BEGIN {
+count=0;
+}
+{
+if($1=="d")
+count++;
+}
+END {
+printf("number of packets dropped=%d",count);
+}
+SIM2
+set ns [new Simulator]
+set tf [open sim2.tr w]
+set nf [open sim2.nam w]
+$ns trace-all $tf
+$ns namtrace-all $nf
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+set n4 [$ns node]
+set n5 [$ns node]
+$ns duplex-link $n0 $n5 1Mb 10ms DropTail
+$ns duplex-link $n1 $n5 1Mb 10ms DropTail
+$ns duplex-link $n2 $n5 1Mb 10ms DropTail
+$ns duplex-link $n3 $n5 1Mb 10ms DropTail
+$ns duplex-link $n4 $n5 1Mb 10ms DropTail
+$ns queue-limit $n0 $n5 2
+$ns queue-limit $n1 $n5 2
+$ns queue-limit $n2 $n5 2
+$ns queue-limit $n3 $n5 2
+$ns queue-limit $n4 $n5 2
+Agent/Ping instproc recv {from rtt} {
+$self instvar node_
+puts "node [$node_ id] recieved ping packet from $from with round trip time $rtt ms"
+}
+set p0 [$ns create-connection Ping $n0 Ping $n5 1]
+set p1 [$ns create-connection Ping $n1 Ping $n5 0]
+set p2 [$ns create-connection Ping $n2 Ping $n5 0]
+set p3 [$ns create-connection Ping $n3 Ping $n5 0]
+set p4 [$ns create-connection Ping $n4 Ping $n5 0]
+for {set i 0} {$i<30} {incr i} {
+$ns at [expr $i/10] "$p0 send "
+$ns at [expr $i/10] "$p1 send "
+$ns at [expr $i/10] "$p2 send "
+$ns at [expr $i/10] "$p3 send "
+$ns at [expr $i/10] "$p4 send "
+}
+proc finish {} {
+global ns tf nf
+$ns flush-trace
+close $tf
+close $nf
+exit 0
+}
+$ns at 5.0 "finish"
+$ns run
+AWK FILE
+BEGIN {
+count=0;
+}
+{
+if($1=="d")
+count++;
+}
+END {
+printf("number of packets dropped=%d",count);
+}
+SIM3
+set ns [new Simulator]
+set tf [open sim3.tr w]
+$ns trace-all $tf
+set nf [open sim3.nam w]
+$ns namtrace-all $nf
+proc stop { } {
+global ns nf tf
+$ns flush-trace
+close $nf
+ close $tf
+ exit 0
+}
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+set n4 [$ns node]
+set n5 [$ns node]
+lappend nl $n0 $n1 $n2 $n3 $n4 $n5
+$ns make-lan $nl 1Mb 10ms LL Queue/DropTail
+set tcp1 [new Agent/TCP]
+$ns attach-agent $n0 $tcp1
+set tcpsink1 [new Agent/TCPSink]
+$ns attach-agent $n5 $tcpsink1
+$ns connect $tcp1 $tcpsink1
+set tcp2 [new Agent/TCP]
+$ns attach-agent $n4 $tcp2
+set tcpsink2 [new Agent/TCPSink]
+$ns attach-agent $n0 $tcpsink2
+$ns connect $tcp2 $tcpsink2
+set ftp1 [new Application/FTP]
+$ftp1 attach-agent $tcp1
+set ftp2 [new Application/FTP]
+$ftp2 attach-agent $tcp2
+$tcp1 attach $tf
+$tcp1 trace cwnd_
+$tcp2 attach $tf
+$tcp2 trace cwnd_
+$ns at 0.0 "$ftp1 start"
+$ns at 0.2 "$ftp2 start"
+$ns at 5.0 "stop"
+$ns run
+AWK FILE
+BEGIN {
+}
+{
+if($6=="cwnd_")
+{
+if(($2==0)&&($4==5))
+printf("%4.2f %d\n",$1,$7)>>"g1.txt";
+if(($2==4)&&($4==0))
+printf("%4.2f %d\n",$1,$7)>>"g2.txt";
+}
+}
+END {
+printf("Done");
+}
+SIM4
+set ns [new Simulator]
+set tf [open sim4.tr w]
+$ns trace-all $tf
+set nf [open sim4.nam w]
+$ns namtrace-all-wireless $nf 750 750
+set topo [new Topography]
+$topo load_flatgrid 750 750
+set wc [new Channel/WirelessChannel]
+$ns node-config\
+-adhocRouting DSDV\
+-llType LL\
+-macType Mac/802_11\
+-ifqType Queue/DropTail\
+-ifqLen 50\
+-phyType Phy/WirelessPhy\
+-topoInstance $topo\
+-agentTrace ON\
+-routerTrace ON\
+-propType Propagation/TwoRayGround\
+-antType Antenna/OmniAntenna\
+-channel $wc
+create-god 3
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+$n0 set X_ 50
+$n0 set Y_ 50
+$n0 set Z_ 0
+$n1 set X_ 100
+$n1 set Y_ 100
+$n1 set Z_ 0
+$n2 set X_ 400
+$n2 set Y_ 400
+$n2 set Z_ 0
+set tcp1 [new Agent/TCP]
+$ns attach-agent $n0 $tcp1
+set sink1 [new Agent/TCPSink]
+$ns attach-agent $n1 $sink1
+$ns connect $tcp1 $sink1
+set tcp2 [new Agent/TCP]
+$ns attach-agent $n1 $tcp2
+set sink2 [new Agent/TCPSink]
+$ns attach-agent $n2 $sink2
+$ns connect $tcp2 $sink2
+set ftp1 [new Application/FTP]
+$ftp1 attach-agent $tcp1
+set ftp2 [new Application/FTP]
+$ftp2 attach-agent $tcp2
+$ns at 0 "$n0 setdest 50 50 100"
+$ns at 0 "$n1 setdest 100 100 100"
+$ns at 0 "$n2 setdest 600 600 100"
+$ns at 5 "$ftp1 start"
+$ns at 5 "$ftp2 start"
+$ns at 10 "$n1 setdest 500 500 200"
+$ns at 20 "$n1 setdest 150 150 300"
+$ns at 25 "finish"
+proc finish { } {
+global ns tf nf
+$ns flush-trace
+close $tf
+close $nf
+exit 0
+}
+$ns run
+AWK FILE
+BEGIN {
+count1=0;
+count2=0;
+pack1=0;
+pack2=0;
+time1=0;
+time2=0;
+}
+{
+if($1=="r" && $3=="_1_" && $4=="AGT")
+{
+count1++;
+pack1=pack1+$8;
+time1=$2;
+}
+if($1=="r" && $3=="_2_" && $4=="AGT")
+{
+count2++;
+pack2=pack2+$8;
+time2=$2;
+}
+}
+END {
+printf("%d %d %d ",count1,pack1,time1);
+printf("%d %d %d ",count2,pack2,time2);
+printf("node(0) to node(1) link performance:%6.2f Mbps\n",((pack1*8)/(time1*1000000)));
+printf("node(0) to node(1) link performance:%6.2f pps\n",(count1/time1));
+printf("node(1) to node(2) link performance:%6.2f Mbps\n",((pack2*8)/(time2*1000000)));
+printf("node(1) to node(2) link performance:%6.2f pps\n",(count2/time2));
+}
+SIM 5
+set ns [new Simulator]
+set tf [open sim5.tr w]
+$ns trace-all $tf
+set nf [open sim5.nam w]
+$ns namtrace-all $nf
+set ms1 [$ns node]
+set bs1 [$ns node]
+set msc [$ns node]
+set bs2 [$ns node]
+set ms2 [$ns node]
+$ns duplex-link $ms1 $bs1 1Mb 1ms DropTail
+$ns duplex-link $bs1 $msc 1Mb 10ms DropTail
+$ns duplex-link $msc $bs2 1Mb 10ms DropTail
+$ns duplex-link $bs2 $ms2 1Mb 1ms DropTail
+$ns bandwidth $ms1 $bs1 9.6Kb simplex
+$ns bandwidth $bs1 $ms1 9.6Kb simplex
+$ns insert-delayer $ms1 $bs1 [new Delayer]
+puts "Cell Topology"
+set tcp1 [new Agent/TCP]
+$ns attach-agent $ms1 $tcp1
+set sink1 [new Agent/TCPSink]
+$ns attach-agent $ms2 $sink1
+$ns connect $tcp1 $sink1
+set ftp1 [new Application/FTP]
+$ftp1 attach-agent $tcp1
+proc stop { } {
+global ms1 bs1
+set sid [$ms1 id]
+set did [$bs1 id]
+puts $sid
+puts $did
+exec /home/root-ise/sim56/getrc -s $sid -d $did -f 0 sim5.tr |\
+/home/root-ise/sim56/raw2xg -s 0.01 -m 100 -r >>plot.xgr
+exec /home/root-ise/sim56/getrc -s $sid -d $did -f 0 sim5.tr |\
+/home/root-ise/sim56/raw2xg -a -s 0.01 -m 100 >>plot.xgr
+exec ./xg2gp.awk plot.xgr
+exec xgraph -bb -tk -nl -m -x time -y packet plot.xgr f
+exit 0
+}
+$ns at 0.1 "$ftp1 start"
+$ns at 20 "stop"
+$ns run
+XG2GP.AWK
+#!/usr/bin/awk -f
+# convert from raw2xg output into gnuplot format
+BEGIN {system("rm -f acks packets drops")}
+{if (ack) print $1 " " $2 >>"acks"}
+{if (pkt) print $1 " " $2 >>"packets"}
+{if (drp) print $1 " " $2 >>"drops"}
+$1 ~ /^.ack/ {ack=1}
+$1 ~ /^.packets/ {pkt=1}
+$1 ~ /^.drops/ {drp=1}
+$1 ~ /^$/ {ack=0; pkt=0; drp=0}
+SIM6
+set ns [new Simulator]
+set tf [open sim6.tr w]
+$ns trace-all $tf
+set nf [open sim6.nam w]
+$ns namtrace-all $nf
+set ms1 [$ns node]
+set bs1 [$ns node]
+set msc [$ns node]
+set bs2 [$ns node]
+set ms2 [$ns node]
+$ns duplex-link $ms1 $bs1 1Mb 1ms DropTail
+$ns duplex-link $bs1 $msc 1Mb 10ms DropTail
+$ns duplex-link $msc $bs2 1Mb 10ms DropTail
+$ns duplex-link $bs2 $ms2 1Mb 1ms DropTail
+$ns bandwidth $ms1 $bs1 364Kb simplex
+$ns bandwidth $bs1 $ms1 64Kb simplex
+$ns insert-delayer $ms1 $bs1 [new Delayer]
+puts "Cell Topology"
+set tcp1 [new Agent/TCP]
+$ns attach-agent $ms1 $tcp1
+set sink1 [new Agent/TCPSink]
+$ns attach-agent $ms2 $sink1
+$ns connect $tcp1 $sink1
+set ftp1 [new Application/FTP]
+$ftp1 attach-agent $tcp1
+proc stop { } {
+global ms1 bs1
+set sid [$ms1 id]
+set did [$bs1 id]
+puts $sid
+puts $did
+exec /home/root-ise/sim56/getrc -s $sid -d $did -f 0 sim6.tr |\
+/home/root-ise/sim56/raw2xg -s 0.01 -m 100 -r >>plot.txt
+exec /home/root-ise/sim56/getrc -s $sid -d $did -f 0 sim6.tr |\
+/home/root-ise/sim56/raw2xg -a -s 0.01 -m 100 >>plot.txt
+exec ./xg2gp.awk plot.xgr
+exec xgraph -bb -tk -nl -m -x time -y packet plot.txt f
+exit 0
+}
+$ns at 0.2 "$ftp1 start"
+$ns at 20 "stop"
+$ns run
+XG2GP.AWK
+#!/usr/bin/awk -f
+# convert from raw2xg output into gnuplot format
+BEGIN {system("rm -f acks packets drops")}
+{if (ack) print $1 " " $2 >>"acks"}
+{if (pkt) print $1 " " $2 >>"packets"}
+{if (drp) print $1 " " $2 >>"drops"}
+$1 ~ /^.ack/ {ack=1}
+$1 ~ /^.packets/ {pkt=1}
+$1 ~ /^.drops/ {drp=1}
+$1 ~ /^$/ {ack=0; pkt=0; drp=0}
